@@ -2,10 +2,10 @@ Thermal_Printer
 ===============
 
 
-[![Part Name](URL for picture of part  
-*Part Name (SKU)*](URL for product on Sparkfun.com)
+[![Thermal Printer](https://dlnmh9ip6v2uc.cloudfront.net/images/products/1/0/4/3/8/10438-01b_i_ma.jpg)
+*Thermal Printer(COM-10438)*](https://www.sparkfun.com/products/10438)
 
-Demo Code for the Thermal Printer available from SparkFun Electronics
+Demo Code for the Thermal Printer available from SparkFun Electronics.
 
 
 Repository Contents
