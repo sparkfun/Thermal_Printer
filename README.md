@@ -12,6 +12,7 @@ Repository Contents
 -------------------
 
 * **/Firmware** - Example Arduino sketch to run the printer
+* **/QRprint**	- A library and example Arduino sketch for generating and printing QR codes.
 
 License Information
 -------------------
