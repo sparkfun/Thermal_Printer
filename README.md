@@ -5,7 +5,7 @@ Thermal Printer
 
 [*Thermal Printer (COM-14970)*](https://www.sparkfun.com/products/14970)
 
-Demo Code for the (CSN-A2-T) thermal printer available from SparkFun Electronics. Simply connect to a serial UART to print.
+Demo Code for the (CSN-A2-T) thermal printer available from SparkFun Electronics. Simply connect to a serial UART with a sufficient power supply to print on thermal printer paper!
 
 Documentation
 --------------
