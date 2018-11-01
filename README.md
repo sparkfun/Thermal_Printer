@@ -3,7 +3,7 @@ Thermal_Printer
 
 ![Thermal Printer](https://cdn.sparkfun.com//assets/parts/1/3/2/6/9/14970-Thermal_Printer-02.jpg)
 
-*Thermal Printer (COM-14970)*](https://www.sparkfun.com/products/14970)
+[*Thermal Printer (COM-14970)*](https://www.sparkfun.com/products/14970)
 
 Demo Code for the Thermal Printer available from SparkFun Electronics.
 
