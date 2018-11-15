@@ -1,14 +1,14 @@
 /*
- 3-2-2011
- Spark Fun Electronics 2011
- Nathan Seidle
+ SparkFun Electronics 2011
+ Updated By: Sam Wizer 8/17/2018
+ Written by: Nathan Seidle 3-2-2011
  
  This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
  
  To use this example code, attach
  Arduino : Printer
  D2 : Green wire (Printer TX)
- D3 : Yello wire (Printer RX)
+ D3 : Yellow wire (Printer RX)
  VIN (9V wall adapter) : Red wire
  GND : Black wires
  Open Arduino serial window at 38400bps. Turn on line endings!
@@ -51,7 +51,7 @@
  
  */
 #include <SoftwareSerial.h>
-SoftwareSerial Thermal(10, 9); //Soft RX from printer on D2, soft TX out to printer on D3
+SoftwareSerial Thermal(2, 3); //Soft RX from printer on D2, soft TX out to printer on D3
 
 #define FALSE  0
 #define TRUE  1
@@ -67,7 +67,7 @@ char printBreakTime = 15; //Not sure what the defaut is. Testing shows the max h
 void setup() {
   pinMode(ledPin, OUTPUT);
 
-  Serial.begin(9600); //Use hardware serial for debugging
+  Serial.begin(38400); //Use hardware serial for debugging
   Thermal.begin(19200); //Setup soft serial for ThermalPrinter control
 
   printOnBlack = FALSE;
@@ -106,9 +106,10 @@ void loop() {
     Serial.println("8) Adjust print settings");
     Serial.println("9) Print factory test page");
     Serial.println("a) Print entire character set");
-    Serial.println("b) Print numberic barcode");
+    Serial.println("b) Print numeric barcode");
     Serial.println("c) Print alpha barcode");
     Serial.println("d) Bitmap test");
+    Serial.println("e) Print QR Code");
     Serial.print(": ");
 
     while(1) {
@@ -139,7 +140,7 @@ void loop() {
           else if(option == 13) 
             Thermal.write(10); //Line feed on CR
           else {
-            Thermal.write(option); //Push this character to printer
+            Thermal.print(option); //Push this character to printer
             Serial.print(option);
             delay(10);
           }
@@ -158,33 +159,41 @@ void loop() {
     }
     else if(option == '4')  {
       Serial.println("Printer Status:");
-
-      Thermal.write(27); //ESC
-      Thermal.write(118); //v
-
-      while(Thermal.available() < 8) ; //Wait for response
-      char printerStatus[8];
-      for(int x = 0 ; x < 8 ; x++) {
-        printerStatus[x] = Thermal.read();
+      Thermal.write(16); 
+      Thermal.write(4); 
+      Thermal.write(4);  //paper status
+      char paperStatus = Thermal.read();
+      if (paperStatus & 8){           //Check bit 3
+        Serial.println("Paper near end of roll");
+      }
+      else if (paperStatus & 64){     //Check bit 6
+        Serial.println("Refill paper");
+      }
+      else{
+        Serial.println("Plenty of paper!");
       }
 
-      if(printerStatus[0] == 'P') { //Check to make sure the array contains what we expect
-        if(printerStatus[1] == 1) 
-          Serial.println("Paper detected");
-        else
-          Serial.println("No paper!");
-        Serial.print("System Voltage: ");
-        Serial.print(printerStatus[3]);
-        Serial.print(".");
-        Serial.print(printerStatus[4]);
-        Serial.println("V");
-        Serial.print("Head temp: ");
-        Serial.print(printerStatus[6]);
-        Serial.print(printerStatus[7]);
-        Serial.println("C");
+      Thermal.write(16); 
+      Thermal.write(4); 
+      Thermal.write(3);  //transmit error status
+      char transmitErrorStatus = Thermal.read();
+      if (transmitErrorStatus & 32){     //Check bit 5
+        Serial.println("Unrecoverable error!");
       }
-      else 
-        Serial.print("Status Read Error");
+      if (transmitErrorStatus & 64){  //Check bit 6
+        Serial.println("Print head temp and voltage exceeded");
+      }
+      
+      Thermal.write(16); 
+      Thermal.write(4); 
+      Thermal.write(2);  //transit offline status
+      char transitOfflineStatus = Thermal.read();
+      if (transitOfflineStatus & 4){    //Check bit 2
+        Serial.println("Cover open");
+      }
+      if (transitOfflineStatus & 64){    //Check bit 6
+        Serial.println("Error");
+      }
     }
     else if(option == '5') {
       //Select background color
@@ -199,7 +208,7 @@ void loop() {
       else {
         printOnBlack = FALSE;
         Serial.println("Print on white");
-        Thermal.write((byte)0); //Prints text on white background
+        Thermal.print((byte)0); //Prints text on white background
       }
     }
     else if(option == '6') {
@@ -249,8 +258,8 @@ void loop() {
       Thermal.write(27);
       Thermal.write(55);
       Thermal.write(7); //Default 64 dots = 8*('7'+1)
-      Thermal.write(heatTime); //Default 80 or 800us
-      Thermal.write(heatInterval); //Default 2 or 20us
+      Thermal.write((byte)heatTime); //Default 80 or 800us
+      Thermal.write((byte)heatInterval); //Default 2 or 20us
 
       Serial.println();
       Serial.println("Parameters set");
@@ -294,6 +303,8 @@ void loop() {
     }
     else if (option == '9') {
       //Print test page
+      Thermal.write(27);  //1B
+      Thermal.write(64);  //40
       Thermal.write(18); //DC2
       Thermal.write(84); //T
     }
@@ -307,9 +318,10 @@ void loop() {
     else if (option == 'b') {
       Serial.println("Barcode printing");
       //Print barcode example
-      Thermal.print(29); //GS
-      Thermal.print(107); //k
-      Thermal.print(0); //m = 0
+      
+      Thermal.write(29); //GS
+      Thermal.write(107); //k
+      Thermal.write((byte)0); //m = 0
       Thermal.print('2'); //Data
       Thermal.print('9');
       Thermal.print('1');
@@ -374,7 +386,32 @@ void loop() {
       Thermal.write(10); //Paper feed
 
       Serial.println("Print bitmap done");
-    }    
+    }
+    else if(option == 'e'){
+      //QR code example
+      Serial.println("Print QR code");
+      Thermal.write(29);  //GS
+      Thermal.write(107);  //k
+      Thermal.write(97); //m 
+      Thermal.write(0x08);
+      Thermal.write(0x02);
+      Thermal.write(0x08);
+      Thermal.write((byte)0x00);
+
+      //Start of data
+      Thermal.print('1'); //Data, cap letters, $, ., % acceptable
+      Thermal.print('1');
+      Thermal.print('2');
+      Thermal.print('3');
+      Thermal.print('5');
+      Thermal.print('8');
+
+      Thermal.write((byte)0); //Terminator
+
+      delay(3000); //For some reason we can't immediately have line feeds here
+      Thermal.write(10); //Paper feed
+      Thermal.write(10); //Paper feed
+    }
     else {
       Serial.print("Choice = ");
       Serial.println(option, DEC);
@@ -421,11 +458,3 @@ uint8_t read_line(char* buffer, uint8_t buffer_length) {
 
   return read_length;
 }
-
-
-
-
-
-
-
-
